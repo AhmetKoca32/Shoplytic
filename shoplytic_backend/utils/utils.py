@@ -1,0 +1,1 @@
+# Yardımcı fonksiyonlar (ör. OCR işlemleri)

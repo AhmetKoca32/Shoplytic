@@ -1,0 +1,1 @@
+# Config sınıfı (env, DB bağlantıları)
