@@ -114,4 +114,4 @@ Proje açık kaynaklı değildir. Ancak teknik destek veya tanıtım amacıyla s
 **Ahmet Koca**
 Süleyman Demirel Üniversitesi - Bilgisayar Mühendisliği
 📫 [kocaahmetkoca32@gmail.com](mailto:kocaahmetkoca32@gmail.com)
-🔗 [LinkedIn](https://www.linkedin.com/in/ahmetkoca32)
+🔗 [LinkedIn](https://www.linkedin.com/in/ahmetkocaa)
