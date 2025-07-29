@@ -99,7 +99,7 @@ Her bir modül için test senaryoları tanımlanmıştır:
 
 3. **Config ayarları**
 
-   `.env` dosyasına OpenAI key, API endpoint'leri ve diğer değişkenler eklenir.
+   `.env` dosyasına Gemini API key, API endpoint'leri ve diğer değişkenler eklenir.
 
 ---
 
