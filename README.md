@@ -22,7 +22,7 @@ Proje LangGraph ile oluşturulmuş bir düğüm (node) mimarisine sahiptir:
 
 - **Giriş Node’u** → Kullanıcı girdisini veya sistem tetikleyicisini alır  
 - **Prompt Node** → Dinamik olarak AI'a gönderilecek prompt'u üretir  
-- **LLM Node** → LLM çağrısı yapılır (GPT-4 / Claude / Gemini destekli)  
+- **LLM Node** → LLM çağrısı yapılır (Gemini destekli)  
 - **API Call Node** → E-ticaret sistemlerine veri gönderimi veya çekimi yapılır  
 - **Veri İşleme Node’u** → Gelen veriler analiz edilir, dönüştürülür  
 - **Çıkış Node’u** → Sonuçlar dashboard’a veya kullanıcıya iletilir  
