@@ -1,1 +1,0 @@
-# Arka plan görevleri (celery, rq vs.)

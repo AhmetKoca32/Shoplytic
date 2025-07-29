@@ -31,8 +31,6 @@ Proje LangGraph ile oluşturulmuş bir düğüm (node) mimarisine sahiptir:
 
 Proje içerisinde çok adımlı konuşma ve işlem geçmişi yönetimi için `MessageContextPersistence (MCP)` sistemi kullanılmıştır. Böylece AI kararlarında bağlam korunur.
 
----
-
 ## 🧠 Prompt Engineering
 
 Sistemde kullanılan başlıca prompt şablonları:
@@ -99,7 +97,7 @@ Her bir modül için test senaryoları tanımlanmıştır:
 
 3. **Config ayarları**
 
-   `.env` dosyasına OpenAI key, API endpoint'leri ve diğer değişkenler eklenir.
+   `.env` dosyasına Gemini API key, API endpoint'leri ve diğer değişkenler eklenir.
 
 ---
 

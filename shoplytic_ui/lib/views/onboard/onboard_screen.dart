@@ -74,6 +74,7 @@ class _OnboardScreenState extends State<OnboardScreen> {
         curve: Curves.easeInOut,
       );
     } else {
+      // Onboarding bittiğinde login ekranına yönlendir
       Navigator.of(context).pushReplacementNamed('/login');
     }
   }
