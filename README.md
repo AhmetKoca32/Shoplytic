@@ -31,8 +31,6 @@ Proje LangGraph ile oluşturulmuş bir düğüm (node) mimarisine sahiptir:
 
 Proje içerisinde çok adımlı konuşma ve işlem geçmişi yönetimi için `MessageContextPersistence (MCP)` sistemi kullanılmıştır. Böylece AI kararlarında bağlam korunur.
 
----
-
 ## 🧠 Prompt Engineering
 
 Sistemde kullanılan başlıca prompt şablonları:

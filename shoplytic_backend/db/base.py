@@ -1,1 +1,0 @@
- # Base modeller ve ortak fonksiyonlar
