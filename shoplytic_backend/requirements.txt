@@ -4,13 +4,16 @@ uvicorn==0.24.0
 pydantic==2.5.0
 
 # LangGraph and AI
-langgraph==0.0.40
-langchain==0.0.350
-langchain-openai==0.0.3
-langchain-anthropic==0.1.7
-openai==1.6.1
-google-generativeai==0.3.2
-langchain-google-genai==0.0.5
+langgraph>=0.0.40
+langchain>=0.1.0
+langchain-openai>=0.0.3
+langchain-anthropic>=0.1.7
+langchain-google-genai>=0.0.5
+langchain-community>=0.0.10
+openai>=1.6.1
+google-generativeai>=0.3.2
+duckduckgo-search>=4.1.1
+wikipedia>=1.4.0
 
 # Database and Storage
 sqlalchemy==2.0.23

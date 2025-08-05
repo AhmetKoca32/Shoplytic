@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 from app.langgraph.graph_builder import WorkflowGraph
-from app.services.ai_service import AIService
-from app.services.ecommerce_service import EcommerceService
+
 from app.config.settings import get_settings, Settings
+from app.utils.ecommerce_client import EcommerceClient
 
 # Router oluştur
 router = APIRouter()
@@ -23,39 +23,25 @@ class WorkflowResponse(BaseModel):
     workflow_id: str
     execution_time: float
 
-class ProductClassificationRequest(BaseModel):
-    """Ürün sınıflandırma isteği"""
-    product_description: str
-    product_title: str
-    additional_info: Optional[Dict[str, Any]] = None
 
-class ProductRecommendationRequest(BaseModel):
-    """Ürün öneri isteği"""
-    cart_items: List[Dict[str, Any]]
+
+class MindMapGenerationRequest(BaseModel):
+    """Zihin haritası oluşturma isteği"""
+    user_input: str
     user_preferences: Optional[Dict[str, Any]] = None
-    limit: int = 5
-
-class CustomerSegmentationRequest(BaseModel):
-    """Müşteri segmentasyon isteği"""
-    customer_data: Dict[str, Any]
-    purchase_history: List[Dict[str, Any]]
 
 # Dependency injection
-def get_ai_service(settings: Settings = Depends(get_settings)) -> AIService:
-    return AIService(settings)
-
-def get_ecommerce_service(settings: Settings = Depends(get_settings)) -> EcommerceService:
-    return EcommerceService(settings)
-
 def get_workflow_graph() -> WorkflowGraph:
     return WorkflowGraph()
+
+def get_ecommerce_client() -> EcommerceClient:
+    return EcommerceClient()
 
 # Ana workflow endpoint'i
 @router.post("/workflow/execute", response_model=WorkflowResponse)
 async def execute_workflow(
     request: WorkflowRequest,
-    workflow_graph: WorkflowGraph = Depends(get_workflow_graph),
-    ai_service: AIService = Depends(get_ai_service)
+    workflow_graph: WorkflowGraph = Depends(get_workflow_graph)
 ):
     """Ana AI iş akışını çalıştır"""
     try:
@@ -75,127 +61,99 @@ async def execute_workflow(
         raise HTTPException(status_code=500, detail=f"Workflow execution failed: {str(e)}")
 
 # Ürün sınıflandırma endpoint'i
-@router.post("/ai/classify-product")
-async def classify_product(
-    request: ProductClassificationRequest,
-    ai_service: AIService = Depends(get_ai_service)
+
+
+@router.post("/ai/generate-mindmap")
+async def generate_mindmap(
+    request: MindMapGenerationRequest,
+    workflow_graph: WorkflowGraph = Depends(get_workflow_graph)
 ):
-    """Ürünü AI ile sınıflandır"""
+    """Zihin haritası oluştur"""
     try:
-        classification = await ai_service.classify_product(
-            title=request.product_title,
-            description=request.product_description,
-            additional_info=request.additional_info
+        result = await workflow_graph.execute(
+            input_data={
+                "user_input": request.user_input,
+                "user_preferences": request.user_preferences or {}
+            },
+            workflow_type="mind_map_generation"
         )
         
         return {
             "success": True,
-            "classification": classification
+            "mind_map": result.get("output", {}),
+            "workflow_id": result.get("workflow_id")
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Product classification failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Mind map generation failed: {str(e)}")
 
-# Ürün öneri endpoint'i
-@router.post("/ai/recommend-products")
-async def recommend_products(
-    request: ProductRecommendationRequest,
-    ai_service: AIService = Depends(get_ai_service)
+# E-ticaret endpoint'leri
+@router.get("/ecommerce/search")
+async def search_products(
+    query: str,
+    category: str = None,
+    limit: int = 5,
+    ecommerce_client: EcommerceClient = Depends(get_ecommerce_client)
 ):
-    """Sepet içeriğine göre ürün öner"""
+    """Ürün arama"""
     try:
-        recommendations = await ai_service.recommend_products(
-            cart_items=request.cart_items,
-            user_preferences=request.user_preferences,
-            limit=request.limit
-        )
-        
-        return {
-            "success": True,
-            "recommendations": recommendations
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Product recommendation failed: {str(e)}")
-
-# Müşteri segmentasyon endpoint'i
-@router.post("/ai/segment-customer")
-async def segment_customer(
-    request: CustomerSegmentationRequest,
-    ai_service: AIService = Depends(get_ai_service)
-):
-    """Müşteriyi AI ile segmentlere ayır"""
-    try:
-        segmentation = await ai_service.segment_customer(
-            customer_data=request.customer_data,
-            purchase_history=request.purchase_history
-        )
-        
-        return {
-            "success": True,
-            "segmentation": segmentation
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Customer segmentation failed: {str(e)}")
-
-# E-ticaret entegrasyon endpoint'leri
-@router.get("/ecommerce/products")
-async def get_products(
-    platform: str = "shopify",
-    limit: int = 50,
-    ecommerce_service: EcommerceService = Depends(get_ecommerce_service)
-):
-    """E-ticaret platformundan ürünleri getir"""
-    try:
-        products = await ecommerce_service.get_products(platform=platform, limit=limit)
+        products = await ecommerce_client.search_products(query, category, limit)
         return {
             "success": True,
             "products": products,
-            "platform": platform
+            "query": query,
+            "category": category
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch products: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Product search failed: {str(e)}")
 
-@router.post("/ecommerce/webhook")
-async def handle_webhook(
-    payload: Dict[str, Any],
-    platform: str = "shopify",
-    workflow_graph: WorkflowGraph = Depends(get_workflow_graph)
+@router.get("/ecommerce/recommendations/{category}")
+async def get_recommendations(
+    category: str,
+    budget: float = None,
+    ecommerce_client: EcommerceClient = Depends(get_ecommerce_client)
 ):
-    """E-ticaret webhook'larını işle"""
+    """Kategori bazlı öneriler"""
     try:
-        # Webhook'u workflow'a yönlendir
-        result = await workflow_graph.handle_webhook(
-            payload=payload,
-            platform=platform
-        )
-        
+        recommendations = await ecommerce_client.get_recommendations(category, budget)
         return {
             "success": True,
-            "message": "Webhook processed successfully",
-            "result": result
+            "recommendations": recommendations,
+            "category": category,
+            "budget": budget
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Webhook processing failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Recommendations failed: {str(e)}")
 
-# n8n entegrasyon endpoint'i
-@router.post("/n8n/trigger")
-async def trigger_n8n_workflow(
-    workflow_data: Dict[str, Any],
-    workflow_id: str,
-    ecommerce_service: EcommerceService = Depends(get_ecommerce_service)
+@router.get("/ecommerce/compare/{product_name}")
+async def compare_prices(
+    product_name: str,
+    ecommerce_client: EcommerceClient = Depends(get_ecommerce_client)
 ):
-    """n8n workflow'unu tetikle"""
+    """Fiyat karşılaştırması"""
     try:
-        result = await ecommerce_service.trigger_n8n_workflow(
-            workflow_id=workflow_id,
-            data=workflow_data
-        )
-        
+        comparison = await ecommerce_client.compare_prices(product_name)
         return {
             "success": True,
-            "n8n_result": result
+            "comparison": comparison,
+            "product_name": product_name
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"n8n workflow trigger failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Price comparison failed: {str(e)}")
+
+@router.get("/ecommerce/stock/{product_id}")
+async def check_stock(
+    product_id: str,
+    ecommerce_client: EcommerceClient = Depends(get_ecommerce_client)
+):
+    """Stok kontrolü"""
+    try:
+        stock_info = await ecommerce_client.check_stock(product_id)
+        return {
+            "success": True,
+            "stock_info": stock_info
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Stock check failed: {str(e)}")
 
 # Sistem durumu endpoint'leri
 @router.get("/system/status")
