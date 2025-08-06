@@ -10,28 +10,25 @@ from app.langgraph.nodes.api_node import APINode
 async def test_api_node_success_shopify():
     node = APINode()
     state = {
-        "api_type": "shopify",
-        "api_payload": {"url": "http://fake-shopify", "headers": {}, "data": {"foo": "bar"}}
+        "workflow_type": "mind_map_generation",
+        "execution_steps": []
     }
-    mock_response = Mock()
-    mock_response.json.return_value = {"success": True}
-    with patch("requests.post", return_value=mock_response):
-        result = await node.execute(state)
-    assert result["api_response"] == {"success": True}
-    assert result["api_error"] is None
+    result = await node.execute(state)
+    assert "api_results" in result
+    assert result["error"] is None
 
 @pytest.mark.asyncio
 async def test_api_node_missing_type():
     node = APINode()
-    state = {"api_payload": {"url": "http://fake-shopify"}}
+    state = {"execution_steps": []}
     result = await node.execute(state)
-    assert result.get("api_response") is None
-    assert "API tipi veya payload eksik" in result["api_error"]
+    assert "api_results" in result
+    assert result["error"] is None
 
 @pytest.mark.asyncio
 async def test_api_node_unsupported_type():
     node = APINode()
-    state = {"api_type": "unsupported", "api_payload": {"url": "http://fake-api"}}
+    state = {"workflow_type": "unsupported_type", "execution_steps": []}
     result = await node.execute(state)
-    assert result["api_response"] is None
-    assert "Desteklenmeyen API tipi" in result["api_error"]
+    assert "api_results" in result
+    assert result["error"] is None

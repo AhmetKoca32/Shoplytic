@@ -185,78 +185,93 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final mindMapProvider = Provider.of<MindMapProvider>(
-                          context,
-                          listen: false,
-                        );
-                        mindMapProvider.setMap(
-                          MindMapNode(
-                            'Üniversiteye Başlıyorum',
-                            children: [
-                              MindMapNode(
-                                'Ev Eşyaları',
-                                children: [
-                                  MindMapNode('Yatak'),
-                                  MindMapNode('Çalışma Masası'),
-                                  MindMapNode('Mutfak Gereçleri'),
-                                  MindMapNode('Banyo Malzemeleri'),
-                                  MindMapNode('Elektronik Eşyalar'),
-                                ],
+                  Consumer<MindMapProvider>(
+                    builder: (context, mindMapProvider, child) {
+                      return Column(
+                        children: [
+                          if (mindMapProvider.isLoading)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 16),
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
-                              MindMapNode(
-                                'Teknoloji',
-                                children: [
-                                  MindMapNode('Laptop'),
-                                  MindMapNode('Tablet'),
-                                  MindMapNode('Kulaklık'),
-                                  MindMapNode('Telefon'),
-                                  MindMapNode('Akıllı Saat'),
-                                ],
+                            ),
+                          if (mindMapProvider.error != null)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.red.withOpacity(0.3),
+                                ),
                               ),
-                              MindMapNode(
-                                'Kıyafet',
-                                children: [
-                                  MindMapNode('Günlük Kıyafetler'),
-                                  MindMapNode('Spor Kıyafetleri'),
-                                  MindMapNode('Resmi Kıyafetler'),
-                                  MindMapNode('Ayakkabılar'),
-                                ],
+                              child: Text(
+                                mindMapProvider.error!,
+                                style: const TextStyle(color: Colors.red),
+                                textAlign: TextAlign.center,
                               ),
-                              MindMapNode(
-                                'Ulaşım',
-                                children: [
-                                  MindMapNode('Bisiklet'),
-                                  MindMapNode('Toplu Taşıma Kartı'),
-                                  MindMapNode('Araç Kiralama'),
-                                  MindMapNode('Yürüyüş Ayakkabıları'),
-                                  MindMapNode('Spor Ekipmanları'),
-                                ],
+                            ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: mindMapProvider.isLoading
+                                  ? null
+                                  : () async {
+                                      if (_promptController.text
+                                          .trim()
+                                          .isNotEmpty) {
+                                        await mindMapProvider.generateMindMap(
+                                          _promptController.text.trim(),
+                                          'user_${DateTime.now().millisecondsSinceEpoch}',
+                                        );
+
+                                        if (mindMapProvider.error == null) {
+                                          setState(() {
+                                            _selectedIndex =
+                                                1; // Zihin haritası sekmesine geç
+                                          });
+                                        }
+                                      } else {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Lütfen bir durum açıklayın',
+                                            ),
+                                            backgroundColor: Colors.orange,
+                                          ),
+                                        );
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF7F7FD5),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 2,
                               ),
-                            ],
+                              child: const Text(
+                                'Gönder',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF7F7FD5),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 2,
-                      ),
-                      child: const Text(
-                        'Gönder',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -271,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final screens = [
       _buildMainContent(),
-      const MindMapScreen(), // Doğrudan widget olarak kullanılıyor
+      const MindMapScreen(),
       const Center(child: Text("Sohbet", style: TextStyle(fontSize: 24))),
       const Center(child: Text("Profil", style: TextStyle(fontSize: 24))),
     ];
