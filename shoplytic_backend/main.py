@@ -47,6 +47,6 @@ if __name__ == "__main__":
         "main:app",
         host=settings.HOST,
         port=settings.PORT,
-        reload=settings.DEBUG,
+        reload=False,  # Reload'u kapat
         log_level="info"
     )

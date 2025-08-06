@@ -1,33 +1,51 @@
-# LangGraph mock - gerçek langgraph yüklenene kadar
-class StateGraph:
-    def __init__(self, state_type):
-        self.state_type = state_type
-        self.nodes = {}
-        self.edges = {}
-        self.entry_point = None
-        self.conditional_edges = {}
+# Gerçek LangGraph kullan
+try:
+    from langgraph.graph import StateGraph, END
+    print("✅ Gerçek LangGraph yüklendi!")
+except ImportError as e:
+    # Fallback mock
+    print(f"⚠️ LangGraph bulunamadı: {e}")
+    print("⚠️ Mock kullanılıyor - gerçek AI cevapları alınamayacak")
+    class StateGraph:
+        def __init__(self, state_type):
+            self.state_type = state_type
+            self.nodes = {}
+            self.edges = {}
+            self.entry_point = None
+            self.conditional_edges = {}
+        
+        def add_node(self, name, func):
+            self.nodes[name] = func
+        
+        def add_edge(self, from_node, to_node):
+            self.edges[from_node] = to_node
+        
+        def set_entry_point(self, node):
+            self.entry_point = node
+        
+        def add_conditional_edges(self, node, condition_func, edges):
+            self.conditional_edges[node] = (condition_func, edges)
+        
+        def compile(self):
+            return self
     
-    def add_node(self, name, func):
-        self.nodes[name] = func
-    
-    def add_edge(self, from_node, to_node):
-        self.edges[from_node] = to_node
-    
-    def set_entry_point(self, node):
-        self.entry_point = node
-    
-    def add_conditional_edges(self, node, condition_func, edges):
-        self.conditional_edges[node] = (condition_func, edges)
-    
-    def compile(self):
-        return self
+    END = "END"
 
-END = "END"
+# LangGraph'ten END'yi import et
+try:
+    from langgraph.graph import END
+except ImportError:
+    END = "END"
 
 from typing import Dict, Any, TypedDict, Optional
 import uuid
 import time
 from datetime import datetime
+
+# Logger import
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Node'ları import et
 from .nodes.entry_node import EntryNode
@@ -38,6 +56,9 @@ from .nodes.memory_node import MemoryNode
 from .nodes.output_node import OutputNode
 from .nodes.tool_node import ToolNode
 from .nodes.agent_node import AgentNode
+
+# Agent'ları import et
+from app.agents.chat_agent import ChatAgent
 
 class WorkflowState(TypedDict):
     """Workflow state modeli"""
@@ -73,6 +94,10 @@ class WorkflowGraph:
             'agent': AgentNode(),  # AI Agent'ları için
             'output': OutputNode()
         }
+        
+        # Chat agent'ını agent node'una tanıt
+        self.nodes['agent'].register_agent("chat_conversation", ChatAgent())
+        
         self._build_graph()
     
     def _build_graph(self):
@@ -82,7 +107,7 @@ class WorkflowGraph:
         
         # Node'ları ekle
         workflow.add_node("entry", self.nodes['entry'].execute)
-        workflow.add_node("prompt", self.nodes['prompt'].execute)
+        workflow.add_node("prompt_node", self.nodes['prompt'].execute)
         workflow.add_node("llm", self.nodes['llm'].execute)
 
         workflow.add_node("process", self.nodes['process'].execute)
@@ -96,8 +121,8 @@ class WorkflowGraph:
         
         # Edge'leri (bağlantıları) tanımla
         workflow.add_edge("entry", "memory")  # Önce hafızayı kontrol et
-        workflow.add_edge("memory", "prompt")  # Sonra prompt oluştur
-        workflow.add_edge("prompt", "llm")     # LLM'e gönder
+        workflow.add_edge("memory", "prompt_node")  # Sonra prompt oluştur
+        workflow.add_edge("prompt_node", "llm")     # LLM'e gönder
         workflow.add_edge("llm", "tool")       # Tool'ları çalıştır
         workflow.add_edge("tool", "agent")     # Agent'ları çalıştır
         workflow.add_edge("agent", "process")  # Yanıtı işle
@@ -126,61 +151,88 @@ class WorkflowGraph:
         workflow_type: str = "product_classification",
         user_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Workflow'u çalıştır (Mock versiyon)"""
+        """Workflow'u çalıştır (Gerçek LangGraph)"""
         start_time = time.time()
         workflow_id = str(uuid.uuid4())
         
         try:
-            # Mock workflow execution
-            if workflow_type == "mind_map_generation":
-                # Zihin haritası oluştur
-                categories = [
-                    {
-                        "name": "Ev Eşyaları",
-                        "priority": 1,
-                        "products": ["Yatak", "Çalışma Masası", "Mutfak Gereçleri"]
-                    },
-                    {
-                        "name": "Teknoloji", 
-                        "priority": 2,
-                        "products": ["Laptop", "Tablet", "Kulaklık"]
-                    },
-                    {
-                        "name": "Kıyafet",
-                        "priority": 3, 
-                        "products": ["Günlük Kıyafetler", "Spor Kıyafetleri"]
-                    }
-                ]
+            # Gerçek LangGraph workflow'unu çalıştır
+            if self.graph:
+                # Initial state oluştur
+                initial_state = WorkflowState(
+                    workflow_id=workflow_id,
+                    workflow_type=workflow_type,
+                    user_id=user_id,
+                    input_data=input_data,
+                    processed_data={},
+                    prompt="",
+                    llm_response="",
+                    llm_output={},
+                    tool_results={},
+                    agent_results={},
+                    memory_context={},
+                    final_output={},
+                    execution_steps=[],
+                    error=None,
+                    timestamp=datetime.now().isoformat()
+                )
                 
-                final_output = {
-                    "mind_map": {
-                        "categories": categories,
-                        "user_input": input_data.get("user_input", ""),
-                        "generated_at": datetime.now().isoformat()
-                    }
+                # LangGraph workflow'unu çalıştır
+                result = await self.graph.ainvoke(initial_state)
+                
+                execution_time = time.time() - start_time
+                
+                return {
+                    "workflow_id": workflow_id,
+                    "output": result.get("final_output", {}),
+                    "execution_time": execution_time,
+                    "steps": result.get("execution_steps", []),
+                    "success": True
                 }
             else:
-                final_output = {
-                    "message": f"Workflow {workflow_type} completed",
-                    "input": input_data
-                }
-            
-            execution_time = time.time() - start_time
-            
-            return {
-                "workflow_id": workflow_id,
-                "output": final_output,
-                "execution_time": execution_time,
-                "steps": ["entry", "memory", "prompt", "llm", "tool", "agent", "process", "output"],
-                "success": True
-            }
+                # Graph yoksa fallback
+                logger.warning("LangGraph bulunamadı, fallback kullanılıyor")
+                return await self._fallback_execute(input_data, workflow_type, user_id)
             
         except Exception as e:
             execution_time = time.time() - start_time
+            logger.error(f"Workflow execution hatası: {e}")
             return {
                 "workflow_id": workflow_id,
                 "output": {},
                 "execution_time": execution_time,
+                "steps": [],
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def _fallback_execute(
+        self, 
+        input_data: Dict[str, Any], 
+        workflow_type: str = "product_classification",
+        user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Fallback execution - LLM node'u direkt çağır"""
+        try:
+            llm_node = self.nodes['llm']
+            result = await llm_node.execute({
+                "workflow_type": workflow_type,
+                "input_data": input_data,
+                "user_id": user_id
+            })
+            
+            return {
+                "workflow_id": str(uuid.uuid4()),
+                "output": result,
+                "execution_time": 0,
+                "steps": ["llm"],
+                "success": True
+            }
+        except Exception as e:
+            return {
+                "workflow_id": str(uuid.uuid4()),
+                "output": {},
+                "execution_time": 0,
                 "steps": [],
                 "success": False,
                 "error": str(e)
@@ -192,5 +244,6 @@ class WorkflowGraph:
             "product_classification",
             "product_recommendation",
             "customer_segmentation",
-            "mind_map_generation"
+            "mind_map_generation",
+            "chat_conversation"
         ]

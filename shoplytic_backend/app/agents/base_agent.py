@@ -32,7 +32,7 @@ class AgentMessage(BaseModel):
 class BaseAgent(ABC):
     """Tüm AI Agent'lar için temel sınıf"""
     
-    def __init__(self, agent_id: str, agent_type: str, llm_model: str = "gemini-pro"):
+    def __init__(self, agent_id: str, agent_type: str, llm_model: str = "gemini-2.0-flash"):
         self.agent_id = agent_id
         self.agent_type = agent_type
         self.state = AgentState(
@@ -42,11 +42,28 @@ class BaseAgent(ABC):
         )
         
         # LLM modeli
-        self.llm = ChatGoogleGenerativeAI(
-            model=llm_model,
-            temperature=0.7,
-            max_output_tokens=2048
-        )
+        try:
+            from app.config.settings import get_settings
+            settings = get_settings()
+            api_key = settings.GEMINI_API_KEY or settings.GOOGLE_API_KEY
+            
+            if api_key:
+                import os
+                os.environ["GOOGLE_API_KEY"] = api_key
+                
+                self.llm = ChatGoogleGenerativeAI(
+                    model="gemini-2.0-flash",
+                    google_api_key=api_key,
+                    temperature=0.7,
+                    max_output_tokens=2048
+                )
+                logger.info(f"Agent {agent_id} için Gemini AI modeli başarıyla yüklendi.")
+            else:
+                logger.warning(f"Agent {agent_id} için API key bulunamadı. Mock kullanılacak.")
+                self.llm = None
+        except Exception as e:
+            logger.error(f"Agent {agent_id} için LLM yüklenemedi: {e}")
+            self.llm = None
         
         # Agent hafızası
         self.memory = {}

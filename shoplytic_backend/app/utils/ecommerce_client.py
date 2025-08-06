@@ -29,7 +29,10 @@ class EcommerceClient:
                     "platform": "Trendyol",
                     "rating": 4.5,
                     "stock": True,
-                    "url": "https://trendyol.com/laptop-1"
+                    "url": "https://trendyol.com/laptop-1",
+                    "image": "https://source.unsplash.com/300x300/?laptop+thinkpad",
+                    "category": "Elektronik",
+                    "description": "Lenovo ThinkPad E15 - İş ve eğitim için ideal laptop"
                 },
                 {
                     "id": "2", 
@@ -38,7 +41,10 @@ class EcommerceClient:
                     "platform": "Hepsiburada",
                     "rating": 4.3,
                     "stock": True,
-                    "url": "https://hepsiburada.com/laptop-2"
+                    "url": "https://hepsiburada.com/laptop-2",
+                    "image": "https://source.unsplash.com/300x300/?hp+laptop",
+                    "category": "Elektronik",
+                    "description": "HP Pavilion 15 - Performanslı ve şık tasarım"
                 }
             ],
             "mont": [
@@ -49,7 +55,10 @@ class EcommerceClient:
                     "platform": "Trendyol",
                     "rating": 4.7,
                     "stock": True,
-                    "url": "https://trendyol.com/mont-1"
+                    "url": "https://trendyol.com/mont-1",
+                    "image": "https://source.unsplash.com/300x300/?winter+coat",
+                    "category": "Giyim",
+                    "description": "Kışlık kalın mont - Soğuk havalarda sıcak tutar"
                 },
                 {
                     "id": "4",
@@ -58,7 +67,10 @@ class EcommerceClient:
                     "platform": "Hepsiburada", 
                     "rating": 4.4,
                     "stock": True,
-                    "url": "https://hepsiburada.com/mont-2"
+                    "url": "https://hepsiburada.com/mont-2",
+                    "image": "https://source.unsplash.com/300x300/?jacket+coat",
+                    "category": "Giyim",
+                    "description": "Hafif kış montu - Şık ve pratik tasarım"
                 }
             ],
             "çanta": [
@@ -69,7 +81,10 @@ class EcommerceClient:
                     "platform": "Trendyol",
                     "rating": 4.6,
                     "stock": True,
-                    "url": "https://trendyol.com/canta-1"
+                    "url": "https://trendyol.com/canta-1",
+                    "image": "https://source.unsplash.com/300x300/?school+bag",
+                    "category": "Giyim",
+                    "description": "Okul çantası 15.6\" - Dayanıklı ve ergonomik"
                 },
                 {
                     "id": "6",
@@ -78,7 +93,10 @@ class EcommerceClient:
                     "platform": "Hepsiburada",
                     "rating": 4.2,
                     "stock": True,
-                    "url": "https://hepsiburada.com/canta-2"
+                    "url": "https://hepsiburada.com/canta-2",
+                    "image": "https://source.unsplash.com/300x300/?laptop+bag",
+                    "category": "Giyim",
+                    "description": "Laptop çantası - Koruyucu ve şık tasarım"
                 }
             ]
         }
@@ -104,12 +122,43 @@ class EcommerceClient:
             # Limit uygula
             products = products[:limit]
             
+            # Resim URL'lerini güncelle
+            for product in products:
+                if not product.get("image"):
+                    product["image"] = self._generate_image_url(product["name"], category or "product")
+            
             logger.info(f"Found {len(products)} products for query: {query}")
             return products
             
         except Exception as e:
             logger.error(f"Product search failed: {str(e)}")
             return []
+    
+    def _generate_image_url(self, product_name: str, category: str) -> str:
+        """Ürün için resim URL'si oluştur"""
+        import random
+        
+        # Kategori bazlı resim anahtar kelimeleri
+        category_keywords = {
+            "laptop": ["laptop", "computer", "electronics", "tech"],
+            "smartphone": ["smartphone", "phone", "mobile", "electronics"],
+            "clothing": ["clothing", "fashion", "shirt", "dress"],
+            "shoes": ["shoes", "footwear", "sneakers", "boots"],
+            "furniture": ["furniture", "chair", "table", "home"],
+            "cosmetics": ["cosmetics", "beauty", "makeup", "skincare"]
+        }
+        
+        keywords = category_keywords.get(category.lower(), [category.lower(), "product"])
+        keyword = random.choice(keywords)
+        
+        image_urls = [
+            f"https://source.unsplash.com/300x300/?{product_name.lower().replace(' ', '+')}",
+            f"https://source.unsplash.com/300x300/?{keyword}",
+            f"https://source.unsplash.com/300x300/?{keyword}+product",
+            f"https://source.unsplash.com/300x300/?{keyword}+item"
+        ]
+        
+        return random.choice(image_urls)
     
     async def get_product_details(self, product_id: str) -> Optional[Dict[str, Any]]:
         """Ürün detayları"""

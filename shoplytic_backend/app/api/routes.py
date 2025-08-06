@@ -30,6 +30,21 @@ class MindMapGenerationRequest(BaseModel):
     user_input: str
     user_preferences: Optional[Dict[str, Any]] = None
 
+class ChatMessageRequest(BaseModel):
+    """Chat mesaj isteği"""
+    message: str
+    user_id: Optional[str] = None
+    conversation_id: Optional[str] = None
+    context: Optional[Dict[str, Any]] = None
+
+class ChatMessageResponse(BaseModel):
+    """Chat mesaj yanıtı"""
+    success: bool
+    response: str
+    conversation_id: str
+    timestamp: str
+    context: Optional[Dict[str, Any]] = None
+
 # Dependency injection
 def get_workflow_graph() -> WorkflowGraph:
     return WorkflowGraph()
@@ -86,6 +101,57 @@ async def generate_mindmap(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Mind map generation failed: {str(e)}")
 
+@router.post("/ai/chat", response_model=ChatMessageResponse)
+async def chat_with_ai(
+    request: ChatMessageRequest,
+    workflow_graph: WorkflowGraph = Depends(get_workflow_graph)
+):
+    """AI ile sohbet et"""
+    try:
+        import uuid
+        from datetime import datetime
+        
+        print(f"💬 Chat isteği alındı: {request.message}")
+        
+        # Conversation ID oluştur
+        conversation_id = request.conversation_id or str(uuid.uuid4())
+        
+        result = await workflow_graph.execute(
+            input_data={
+                "message": request.message,
+                "user_id": request.user_id,
+                "conversation_id": conversation_id,
+                "context": request.context or {}
+            },
+            workflow_type="chat_conversation"
+        )
+        
+        print(f"📊 Workflow result: {result}")
+        
+        # Final output'tan response'u al
+        final_output = result.get("output", {})
+        output = final_output.get("output", {})
+        
+        print(f"📤 Final output: {final_output}")
+        print(f"📤 Output: {output}")
+        
+        # Response'u al, yoksa fallback mesajı kullan
+        response = output.get("response", "Üzgünüm, şu anda yanıt veremiyorum.")
+        context = output.get("context")
+        
+        print(f"💭 Response: {response}")
+        
+        return ChatMessageResponse(
+            success=True,
+            response=response,
+            conversation_id=conversation_id,
+            timestamp=datetime.now().isoformat(),
+            context=context
+        )
+    except Exception as e:
+        print(f"❌ Chat hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
+
 # E-ticaret endpoint'leri
 @router.get("/ecommerce/search")
 async def search_products(
@@ -105,6 +171,31 @@ async def search_products(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Product search failed: {str(e)}")
+
+@router.post("/ecommerce/search-by-category")
+async def search_products_by_category(
+    category: str,
+    products: List[str],
+    limit: int = 5
+):
+    """Kategori ve ürün listesine göre arama"""
+    try:
+        from app.services.ecommerce_service import EcommerceService
+        
+        ecommerce_service = EcommerceService()
+        found_products = await ecommerce_service.search_products_by_category(
+            category, products, limit
+        )
+        await ecommerce_service.close()
+        
+        return {
+            "success": True,
+            "products": found_products,
+            "category": category,
+            "searched_products": products
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Category search failed: {str(e)}")
 
 @router.get("/ecommerce/recommendations/{category}")
 async def get_recommendations(
@@ -164,4 +255,61 @@ async def get_system_status():
         "ai_service": "available",
         "langgraph": "ready",
         "timestamp": "2025-01-29T17:33:30Z"
+    }
+
+# Test endpoint'i
+@router.get("/test")
+async def test_endpoint():
+    """Test endpoint'i - bağlantı kontrolü için"""
+    return {
+        "message": "Backend bağlantısı başarılı!",
+        "status": "connected",
+        "timestamp": "2025-01-29T17:33:30Z"
+    }
+
+# Health check endpoint'i
+@router.get("/health")
+async def health_check():
+    """Health check endpoint'i"""
+    return {
+        "status": "healthy",
+        "timestamp": "2025-01-29T17:33:30Z",
+        "version": "1.0.0"
+    }
+
+# Test ürün resim endpoint'i
+@router.get("/test/products-with-images")
+async def test_products_with_images():
+    """Test ürünleri resimlerle birlikte döndür"""
+    test_products = [
+        {
+            "id": "test_1",
+            "name": "Test Laptop",
+            "price": 15999.99,
+            "platform": "Test Platform",
+            "rating": 4.5,
+            "stock": True,
+            "url": "https://test.com/laptop",
+            "image": "https://source.unsplash.com/300x300/?laptop",
+            "category": "Elektronik",
+            "description": "Test laptop ürünü"
+        },
+        {
+            "id": "test_2",
+            "name": "Test Mont",
+            "price": 899.99,
+            "platform": "Test Platform",
+            "rating": 4.3,
+            "stock": True,
+            "url": "https://test.com/mont",
+            "image": "https://source.unsplash.com/300x300/?winter+coat",
+            "category": "Giyim",
+            "description": "Test mont ürünü"
+        }
+    ]
+    
+    return {
+        "success": True,
+        "products": test_products,
+        "message": "Test ürünleri resimlerle birlikte döndürüldü"
     }

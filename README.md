@@ -2,7 +2,7 @@
 
 ## 📋 Proje Özeti
 
-Shoplytic, kullanıcıların hayatlarındaki yeni durumları paylaştığı ve AI agent'ların bu duruma göre kişiselleştirilmiş zihin haritası oluşturduğu akıllı e-ticaret platformudur.
+Shoplytic, kullanıcıların hayatlarındaki yeni durumları paylaştığı ve AI agent'ların bu duruma göre kişiselleştirilmiş zihin haritası oluşturduğu akıllı e-ticaret platformudur. Platform, sadece ürün önerisi ve satın alma sürecini değil, aynı zamanda tüketici hakları ve hukuki destek süreçlerini de kapsar.
 
 ### 🎯 Ana Senaryo
 **"Adana'da yeni bir üniversite kazandım, kışın çok soğuk oluyor"** gibi bir kullanıcı girişi ile başlayan süreç:
@@ -12,6 +12,14 @@ Shoplytic, kullanıcıların hayatlarındaki yeni durumları paylaştığı ve A
 3. **Kategorilere göre ürünler önerilir**
 4. **E-ticaret platformlarından ürünler sunulur**
 5. **Fiyat karşılaştırması ve satın alma**
+6. **Tüketici hakları desteği** (gelecek özellik)
+
+### 🛡️ Tüketici Hakları Desteği
+Kullanıcı satın aldığı ürünle ilgili sorun yaşadığında:
+- **AI Destekli Şikayet Maili**: Anayasaya uygun, hukuki geçerliliği olan şikayet maili hazırlama
+- **Otomatik Mail Gönderimi**: İlgili kurumlara (Tüketici Hakem Heyeti, Ticaret Bakanlığı vb.) otomatik gönderim
+- **Hukuki Destek**: Tüketici hakları konusunda AI destekli rehberlik
+- **Takip Sistemi**: Şikayet sürecinin takibi ve güncellemeler
 
 ## 🏗️ Mimari Yapı
 
@@ -223,6 +231,13 @@ GET /api/v1/ecommerce/compare/laptop
 }
 ```
 
+### 6. Tüketici Hakları Desteği (Gelecek Özellik)
+Kullanıcı satın aldığı ürünle ilgili sorun yaşadığında:
+- **AI Destekli Şikayet Maili**: Anayasaya uygun, hukuki geçerliliği olan şikayet maili hazırlama
+- **Otomatik Mail Gönderimi**: İlgili kurumlara (Tüketici Hakem Heyeti, Ticaret Bakanlığı vb.) otomatik gönderim
+- **Hukuki Destek**: Tüketici hakları konusunda AI destekli rehberlik
+- **Takip Sistemi**: Şikayet sürecinin takibi ve güncellemeler
+
 ## 🛒 E-ticaret Entegrasyonu
 
 ### EcommerceClient Özellikleri
@@ -331,6 +346,7 @@ EcommerceClient → LangGraph → FastAPI → Flutter App
 - [ ] Blockchain tabanlı ödeme
 - [ ] AR/VR ürün deneyimi
 - [ ] Çoklu dil desteği
+- [ ] **Tüketici Hakları Desteği**: Anayasaya uygun şikayet maili hazırlama ve gönderme sistemi
 
 ## 📝 Notlar
 
@@ -340,4 +356,4 @@ EcommerceClient → LangGraph → FastAPI → Flutter App
 - **MCP**: Hafıza ve bağlam yönetimi için
 - **EcommerceClient**: E-ticaret entegrasyonu için (n8n yerine)
 
-Bu yapı sayesinde kullanıcılar **kişiselleştirilmiş** ve **bağlama uygun** ürün önerileri alabilir ve **direkt satın alma** yapabilir! 🎯🛒
+Bu yapı sayesinde kullanıcılar **kişiselleştirilmiş** ve **bağlama uygun** ürün önerileri alabilir, **direkt satın alma** yapabilir ve **tüketici hakları** konusunda destek alabilir! 🎯🛒⚖️

@@ -3,9 +3,10 @@ ToolNode: LangChain tool'larını kullanan LangGraph Node'u
 """
 import logging
 from typing import Dict, Any, List
-from langchain.tools import Tool
-from langchain.agents import AgentExecutor, create_openai_functions_agent
-from langchain.schema import BaseMessage
+from langchain_core.tools import Tool
+# Agent import'larını geçici olarak devre dışı bırak
+# from langchain.agents import AgentExecutor, create_openai_functions_agent
+from langchain_core.messages import BaseMessage
 from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 import json

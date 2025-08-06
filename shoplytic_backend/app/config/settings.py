@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
     DEFAULT_LLM_MODEL: str = "gpt-4"
     
     # E-ticaret API ayarları
@@ -46,6 +47,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        env_file_encoding = 'utf-8'
 
 @lru_cache()
 def get_settings() -> Settings:

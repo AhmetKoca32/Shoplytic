@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'providers/chat_provider.dart';
 import 'providers/mind_map_provider.dart';
 import 'views/auth/login_screen.dart';
 import 'views/auth/splash_screen.dart';
@@ -14,7 +15,10 @@ class ShoplyticApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => MindMapProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => MindMapProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+      ],
       child: MaterialApp(
         title: 'Shoplytic',
         debugShowCheckedModeBanner: false,

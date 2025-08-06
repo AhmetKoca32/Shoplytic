@@ -11,20 +11,17 @@ class OutputNode:
         return await self.run(state)
 
     async def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        try:
-            output = state.get("api_response") or state.get("processed_output") or state.get("llm_output")
-            state["final_output"] = output
-            state["output_error"] = None
-        except Exception as e:
-            state["final_output"] = None
-            state["output_error"] = str(e)
-        return state
         """
         İş akışı sonucunu uygun biçimde formatlar ve döner.
         """
         try:
-            # Öncelikli olarak API yanıtı, yoksa işlenmiş LLM çıktısı, yoksa LLM çıktısı döner
-            output = state.get("api_response") or state.get("processed_output") or state.get("llm_output")
+            # Öncelikli olarak agent_results, yoksa API yanıtı, yoksa işlenmiş LLM çıktısı, yoksa LLM çıktısı döner
+            output = (
+                state.get("agent_results") or 
+                state.get("api_response") or 
+                state.get("processed_output") or 
+                state.get("llm_output")
+            )
             state["final_output"] = output
             state["output_error"] = None
             logger.info("OutputNode: Çıktı başarıyla formatlandı.")

@@ -19,7 +19,13 @@ class AgentNode:
     def __init__(self):
         self.name = "agent_node"
         self.agent_manager = AgentManager()
+        self.registered_agents = {}  # Workflow tipine göre agent'ları sakla
         logger.info("Agent Node başlatıldı")
+    
+    def register_agent(self, workflow_type: str, agent):
+        """Workflow tipine göre agent kaydet"""
+        self.registered_agents[workflow_type] = agent
+        logger.info(f"Agent registered for workflow type: {workflow_type}")
     
     async def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
         return await self.run(state)
@@ -28,10 +34,25 @@ class AgentNode:
         """Agent'ları çalıştır"""
         
         workflow_type = state.get("workflow_type", "")
-        processed_data = state.get("processed_data", {})
-        llm_output = state.get("llm_output", {})
+        input_data = state.get("input_data", {})
         
         try:
+            # Önce registered agent'ları kontrol et
+            if workflow_type in self.registered_agents:
+                agent = self.registered_agents[workflow_type]
+                result = await agent.process(input_data)
+                
+                # Agent sonuçlarını state'e ekle
+                state["agent_results"] = result
+                state["agent_error"] = None
+                
+                logger.info(f"AgentNode: {workflow_type} registered agent ile tamamlandı.")
+                return state
+            
+            # Eski workflow tipleri için fallback
+            processed_data = state.get("processed_data", {})
+            llm_output = state.get("llm_output", {})
+            
             # Workflow tipine göre agent seçimi
             if workflow_type == "product_classification":
                 result = await self._run_product_agent(processed_data, llm_output)

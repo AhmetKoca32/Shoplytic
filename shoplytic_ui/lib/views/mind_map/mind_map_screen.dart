@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../providers/mind_map_provider.dart';
+import '../../../widgets/ecommerce_products_widget.dart';
 
 class MindMapScreen extends StatefulWidget {
   const MindMapScreen({Key? key}) : super(key: key);
@@ -16,11 +17,14 @@ class MindMapScreen extends StatefulWidget {
 class _MindMapScreenState extends State<MindMapScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
+  late AnimationController _loadingController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  Animation<double>? _rotationAnimation;
 
   MindMapNode? _selectedNode;
   bool _showProducts = false;
+  bool _isLoading = true;
 
   // Kategori merkezlerini painter'dan almak için
   Map<MindMapNode, Offset> _categoryCenters = {};
@@ -33,6 +37,11 @@ class _MindMapScreenState extends State<MindMapScreen>
       vsync: this,
     );
 
+    _loadingController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
@@ -41,12 +50,30 @@ class _MindMapScreenState extends State<MindMapScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
 
-    _animationController.forward();
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _loadingController, curve: Curves.linear),
+    );
+
+    _startLoadingAnimation();
+  }
+
+  void _startLoadingAnimation() {
+    _loadingController.repeat();
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _loadingController.stop();
+        _animationController.forward();
+      }
+    });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _loadingController.dispose();
     super.dispose();
   }
 
@@ -63,31 +90,102 @@ class _MindMapScreenState extends State<MindMapScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    colors: [Color(0xFF0f0f23), Color(0xFF1a1a2e)],
                   ),
                 ),
               ),
               
-              // Content
-              SafeArea(
-                child: Column(
-                  children: [
-                    // Header
-                    _buildHeader(provider),
+              // Loading Screen
+              if (_isLoading)
+                _buildLoadingScreen()
+              else
+                // Content
+                SafeArea(
+                  child: Column(
+                    children: [
+                      // Header
+                      _buildHeader(provider),
 
-                    // Mind Map Content
-                    Expanded(
-                      child: _showProducts && _selectedNode != null
-                          ? _buildProductList(_selectedNode!)
-                          : _buildMindMapWithGesture(provider),
-                    ),
-                  ],
+                      // Mind Map Content
+                      Expanded(
+                        child: _showProducts && _selectedNode != null
+                            ? _buildProductList(_selectedNode!)
+                            : _buildMindMapWithGesture(provider),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildLoadingScreen() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0f0f23), Color(0xFF1a1a2e)],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedBuilder(
+              animation: _rotationAnimation!,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _rotationAnimation!.value * 2 * 3.14159,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFe94560), Color(0xFFc44569)],
+                      ),
+                      borderRadius: BorderRadius.circular(40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFFe94560).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.psychology,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: 32),
+            Text(
+              'Zihin Haritası Oluşturuluyor...',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'AI analiz ediyor ve kategorileri belirliyor',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.8),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -166,8 +264,8 @@ class _MindMapScreenState extends State<MindMapScreen>
                       final tap = details.localPosition;
                       for (final entry in _categoryCenters.entries) {
                         final center = entry.value;
-                        // Kategori düğüm yarıçapı: 50/2 = 25
-                        if ((tap - center).distance < 55) {
+                        // Kategori düğüm yarıçapı: 60/2 = 30 (büyütüldü)
+                        if ((tap - center).distance < 65) {
                           setState(() {
                             _selectedNode = entry.key;
                             _showProducts = true;
@@ -191,6 +289,31 @@ class _MindMapScreenState extends State<MindMapScreen>
 
   Widget _buildProductList(MindMapNode node) {
     final products = node.products ?? [];
+    final items = node.items ?? [];
+
+    // E-ticaret ürünlerini al
+    final ecommerceProducts = _getEcommerceProducts(node);
+
+    // AI önerilen ürünler için e-ticaret ürünlerinden bazılarını kullan
+    final aiRecommendedProducts = ecommerceProducts
+        .take(5)
+        .toList(); // İlk 5 ürün
+
+    // Eğer e-ticaret ürünleri yoksa, items'ı kullan
+    final displayItems = aiRecommendedProducts.isNotEmpty
+        ? aiRecommendedProducts
+              .map(
+                (product) => {
+                  'name': product.name,
+                  'price': product.price,
+                  'platform': product.platform,
+                  'rating': product.rating,
+                  'image': product.image,
+                  'description': product.description,
+                },
+              )
+              .toList()
+        : items.map((item) => {'name': item}).toList();
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -232,7 +355,7 @@ class _MindMapScreenState extends State<MindMapScreen>
                         ),
                       ),
                       Text(
-                        '${products.length} ürün bulundu',
+                        '${displayItems.length} ürün bulundu',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: Colors.white70,
@@ -265,12 +388,33 @@ class _MindMapScreenState extends State<MindMapScreen>
 
           const SizedBox(height: 16),
 
+          // E-ticaret ürünleri
+          if (ecommerceProducts.isNotEmpty)
+            EcommerceProductsWidget(
+              products: ecommerceProducts,
+              categoryName: node.title,
+            ),
+
+          const SizedBox(height: 16),
+
+          // AI önerilen ürünler
+          Text(
+            'AI Önerilen Ürünler',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
           // Products List
           Expanded(
             child: ListView.builder(
-              itemCount: products.length,
+              itemCount: displayItems.length,
               itemBuilder: (context, index) {
-                final product = products[index];
+                final product = displayItems[index];
                 return _buildProductCard(product, index);
               },
             ),
@@ -280,9 +424,53 @@ class _MindMapScreenState extends State<MindMapScreen>
     );
   }
 
-  Widget _buildProductCard(String product, int index) {
+  List<EcommerceProduct> _getEcommerceProducts(MindMapNode node) {
+    // MindMapNode'dan e-ticaret ürünlerini al
+    final ecommerceProducts = <EcommerceProduct>[];
+
+    // Debug: Node verilerini kontrol et
+    print('🔍 MindMapNode: ${node.title}');
+    print('📦 Products field: ${node.products}');
+    print('📦 Products length: ${node.products?.length ?? 0}');
+
+    // Backend'den gelen products verisini kontrol et
+    if (node.products != null) {
+      for (final product in node.products!) {
+        try {
+          print('🛍️ Ürün parse ediliyor: $product');
+          ecommerceProducts.add(
+            EcommerceProduct(
+              id: product['id'] ?? '',
+              name: product['name'] ?? '',
+              price: (product['price'] ?? 0).toDouble(),
+              platform: product['platform'] ?? '',
+              rating: (product['rating'] ?? 0.0).toDouble(),
+              stock: product['stock'] ?? true,
+              url: product['url'] ?? '',
+              image: product['image'] ?? '',
+              category: product['category'] ?? '',
+              description: product['description'] ?? '',
+            ),
+          );
+        } catch (e) {
+          print('❌ Ürün parse hatası: $e');
+        }
+      }
+    }
+
+    print('✅ E-ticaret ürünleri sayısı: ${ecommerceProducts.length}');
+    return ecommerceProducts;
+  }
+
+  Widget _buildProductCard(Map<String, dynamic> product, int index) {
+    final productName = product['name'] ?? 'Ürün ${index + 1}';
+    final productPrice = product['price']?.toString() ?? '';
+    final productPlatform = product['platform'] ?? '';
+    final productRating = product['rating']?.toString() ?? '';
+    final productImage = product['image'] ?? '';
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 12),
       child: AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) {
@@ -293,49 +481,121 @@ class _MindMapScreenState extends State<MindMapScreen>
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: const Color(0xFF1a1a2e),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white.withOpacity(0.2)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _getCategoryColor(_selectedNode?.title ?? ''),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    // Ürün resmi
+                    if (productImage.isNotEmpty)
+                      Container(
+                        width: 80,
+                        height: 80,
+                        margin: const EdgeInsets.only(right: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: const Color(0xFF0f0f23),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            productImage,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.image,
+                                color: Colors.grey,
+                                size: 30,
+                              );
+                            },
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
+                    // Ürün bilgileri
                     Expanded(
-                      child: Text(
-                        product,
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            productName,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              if (productPrice.isNotEmpty) ...[
+                                Text(
+                                  '₺$productPrice',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFe94560),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                              ],
+                              if (productRating.isNotEmpty) ...[
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  productRating,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (productPlatform.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFe94560),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                productPlatform,
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
+                    // Sağ ok ikonu
                     IconButton(
                       onPressed: () {
-                        // TODO: Ürün detayına git
+                        // Ürün detayına git
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('$product detayları açılacak'),
-                            backgroundColor: _getCategoryColor(
-                              _selectedNode?.title ?? '',
-                            ),
+                            content: Text('$productName detayları açılacak'),
+                            backgroundColor: const Color(0xFFe94560),
                           ),
                         );
                       },
@@ -356,29 +616,57 @@ class _MindMapScreenState extends State<MindMapScreen>
 
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
-      case 'ev eşyaları':
+      case 'akademik malzemeler':
+        return const Color(0xFFe94560);
+      case 'kırtasiye':
         return const Color(0xFF4CAF50);
       case 'teknoloji':
         return const Color(0xFF2196F3);
-      case 'kıyafet':
-        return const Color(0xFFE91E63);
-      case 'kitap & kırtasiye':
+      case 'mobilya':
         return const Color(0xFFFF9800);
-      default:
+      case 'ev tekstili':
         return const Color(0xFF9C27B0);
+      case 'yazıcı & tarayıcı':
+        return const Color(0xFF607D8B);
+      case 'ev eşyaları':
+        return const Color(0xFFe94560);
+      case 'kıyafet':
+        return const Color(0xFF16213e);
+      case 'kitap & kırtasiye':
+        return const Color(0xFF1a1a2e);
+      case 'temel ihtiyaçlar':
+        return const Color(0xFF607D8B);
+      case 'öneriler':
+        return const Color(0xFF795548);
+      default:
+        return const Color(0xFFe94560);
     }
   }
 
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
-      case 'ev eşyaları':
-        return Icons.home;
+      case 'akademik malzemeler':
+        return Icons.school;
+      case 'kırtasiye':
+        return Icons.edit;
       case 'teknoloji':
         return Icons.computer;
+      case 'mobilya':
+        return Icons.chair;
+      case 'ev tekstili':
+        return Icons.bed;
+      case 'yazıcı & tarayıcı':
+        return Icons.print;
+      case 'ev eşyaları':
+        return Icons.home;
       case 'kıyafet':
         return Icons.checkroom;
       case 'kitap & kırtasiye':
         return Icons.book;
+      case 'temel ihtiyaçlar':
+        return Icons.shopping_cart;
+      case 'öneriler':
+        return Icons.recommend;
       default:
         return Icons.category;
     }
@@ -397,10 +685,10 @@ class ModernMindMapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.3;
+    final radius = size.width * 0.4; // Mesafeyi artırdık: 0.3 -> 0.4
 
     // Ana düğüm (merkez)
-    _drawCenterNode(canvas, center, 'Ana Fikir');
+    _drawCenterNode(canvas, center, 'Üniversite Hazırlığı');
 
     // Kategorileri çiz
     for (int i = 0; i < categories.length; i++) {
@@ -420,7 +708,9 @@ class ModernMindMapPainter extends CustomPainter {
 
   void _drawCenterNode(Canvas canvas, Offset center, String title) {
     final rect = Rect.fromCenter(
-      center: center, width: 120, height: 60,
+      center: center,
+      width: 140,
+      height: 70, // Ana düğümü büyüttük
     );
     
     // Gölge
@@ -450,11 +740,21 @@ class ModernMindMapPainter extends CustomPainter {
     );
     
     // Text
-    _drawText(canvas, center, title, Colors.black, 16, FontWeight.bold);
+    _drawText(
+      canvas,
+      center,
+      title,
+      Colors.black,
+      18,
+      FontWeight.bold,
+    ); // Ana düğüm yazı boyutunu artırdık
   }
 
   void _drawCategoryNode(Canvas canvas, Offset center, MindMapNode category) {
-    final rect = Rect.fromCenter(center: center, width: 100, height: 50,
+    final rect = Rect.fromCenter(
+      center: center,
+      width: 120,
+      height: 60, // Kategori düğümlerini büyüttük
     );
     
     final color = _getCategoryColor(category.title);
@@ -482,7 +782,7 @@ class ModernMindMapPainter extends CustomPainter {
       center,
       category.title,
       Colors.white,
-      14,
+      16, // Kategori yazı boyutunu artırdık
       FontWeight.w600,
     );
   }
@@ -530,15 +830,15 @@ class ModernMindMapPainter extends CustomPainter {
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'ev eşyaları':
-        return const Color(0xFF4CAF50);
+        return const Color(0xFFe94560);
       case 'teknoloji':
-        return const Color(0xFF2196F3);
+        return const Color(0xFF0f0f23);
       case 'kıyafet':
-        return const Color(0xFFE91E63);
+        return const Color(0xFF16213e);
       case 'kitap & kırtasiye':
-        return const Color(0xFFFF9800);
+        return const Color(0xFF1a1a2e);
       default:
-        return const Color(0xFF9C27B0);
+        return const Color(0xFFe94560);
     }
   }
 
