@@ -1,0 +1,300 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+    margin-bottom: 10px;
+    margin-top: 24px;
+  }
+  .section-label:first-child { margin-top: 0; }
+  .swatch-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    flex: 1;
+    min-width: 80px;
+  }
+  .swatch-block {
+    width: 100%;
+    height: 52px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s;
+    position: relative;
+  }
+  .swatch-block:hover { transform: scale(1.04); }
+  .swatch-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+  }
+  .swatch-hex {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 2px;
+  }
+  .divider {
+    height: 0.5px;
+    background: var(--color-border-tertiary);
+    margin: 20px 0;
+  }
+  .usage-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .usage-card {
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .usage-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+  .usage-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+  }
+  .usage-desc {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+  }
+  .flutter-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .flutter-card {
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 10px 12px;
+  }
+  .flutter-key {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--color-text-tertiary);
+    margin-bottom: 4px;
+  }
+  .flutter-val {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mini-dot {
+    width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0;
+  }
+  .preview-bar {
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    margin-top: 12px;
+  }
+  .preview-text { font-size: 12px; font-weight: 500; }
+  .preview-btn {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  .gradient-strip {
+    height: 8px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    background: linear-gradient(90deg, #0D7A5F 0%, #1BB68A 40%, #E8A020 70%, #F5C35A 100%);
+  }
+</style>
+
+<div style="padding: 1rem 0;">
+
+  <div class="gradient-strip"></div>
+
+  <div class="section-label">Ana Renkler (Primary)</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-block" style="background:#0D7A5F;" title="Deep Teal"></div>
+      <div class="swatch-name">Deep Teal</div>
+      <div class="swatch-hex">#0D7A5F</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#1BB68A;"></div>
+      <div class="swatch-name">Emerald</div>
+      <div class="swatch-hex">#1BB68A</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#3ECFA3;"></div>
+      <div class="swatch-name">Mint Active</div>
+      <div class="swatch-hex">#3ECFA3</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#D4F5EC;"></div>
+      <div class="swatch-name">Mint Surface</div>
+      <div class="swatch-hex">#D4F5EC</div>
+    </div>
+  </div>
+
+  <div class="section-label">Vurgu Rengi (Accent)</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-block" style="background:#E8A020;"></div>
+      <div class="swatch-name">Amber Gold</div>
+      <div class="swatch-hex">#E8A020</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#F5C35A;"></div>
+      <div class="swatch-name">Amber Light</div>
+      <div class="swatch-hex">#F5C35A</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#FFF3D4;"></div>
+      <div class="swatch-name">Amber Surface</div>
+      <div class="swatch-hex">#FFF3D4</div>
+    </div>
+  </div>
+
+  <div class="section-label">Nötr / Zemin</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-block" style="background:#0A0F1E;"></div>
+      <div class="swatch-name">Dark Navy</div>
+      <div class="swatch-hex">#0A0F1E</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#141B2D;"></div>
+      <div class="swatch-name">Surface Dark</div>
+      <div class="swatch-hex">#141B2D</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#F8FAF9; border: 0.5px solid #e0e0e0;"></div>
+      <div class="swatch-name">Off White</div>
+      <div class="swatch-hex">#F8FAF9</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#1C2B27;"></div>
+      <div class="swatch-name">Card Dark</div>
+      <div class="swatch-hex">#1C2B27</div>
+    </div>
+  </div>
+
+  <div class="section-label">Agent Renkleri</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-block" style="background:#1BB68A;"></div>
+      <div class="swatch-name">ContextAgent</div>
+      <div class="swatch-hex">#1BB68A</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#5C7CFA;"></div>
+      <div class="swatch-name">MindMapAgent</div>
+      <div class="swatch-hex">#5C7CFA</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#E8A020;"></div>
+      <div class="swatch-name">ProductAgent</div>
+      <div class="swatch-hex">#E8A020</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#E5533D;"></div>
+      <div class="swatch-name">LegalAgent</div>
+      <div class="swatch-hex">#E5533D</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">Flutter Renk Şeması</div>
+  <div class="flutter-row">
+    <div class="flutter-card">
+      <div class="flutter-key">primaryColor</div>
+      <div class="flutter-val"><div class="mini-dot" style="background:#0D7A5F;"></div>#0D7A5F</div>
+    </div>
+    <div class="flutter-card">
+      <div class="flutter-key">secondary / accentColor</div>
+      <div class="flutter-val"><div class="mini-dot" style="background:#E8A020;"></div>#E8A020</div>
+    </div>
+    <div class="flutter-card">
+      <div class="flutter-key">scaffoldBackground (dark)</div>
+      <div class="flutter-val"><div class="mini-dot" style="background:#0A0F1E;"></div>#0A0F1E</div>
+    </div>
+    <div class="flutter-card">
+      <div class="flutter-key">cardColor (dark)</div>
+      <div class="flutter-val"><div class="mini-dot" style="background:#141B2D;"></div>#141B2D</div>
+    </div>
+    <div class="flutter-card">
+      <div class="flutter-key">scaffoldBackground (light)</div>
+      <div class="flutter-val"><div class="mini-dot" style="background:#F8FAF9; border:1px solid #ddd;"></div>#F8FAF9</div>
+    </div>
+    <div class="flutter-card">
+      <div class="flutter-key">errorColor</div>
+      <div class="flutter-val"><div class="mini-dot" style="background:#E5533D;"></div>#E5533D</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">Kullanım Kılavuzu</div>
+  <div class="usage-row">
+    <div class="usage-card">
+      <div class="usage-title"><span class="usage-dot" style="background:#0D7A5F;"></span>Teal</div>
+      <div class="usage-desc">Butonlar, AppBar, aktif tab, progress indicator</div>
+    </div>
+    <div class="usage-card">
+      <div class="usage-title"><span class="usage-dot" style="background:#E8A020;"></span>Amber</div>
+      <div class="usage-desc">Fiyat etiketi, rating yıldızı, CTA vurgusu</div>
+    </div>
+    <div class="usage-card">
+      <div class="usage-title"><span class="usage-dot" style="background:#5C7CFA;"></span>Lavender</div>
+      <div class="usage-desc">Mind map node'ları, zihin haritası dallar</div>
+    </div>
+    <div class="usage-card">
+      <div class="usage-title"><span class="usage-dot" style="background:#E5533D;"></span>Coral</div>
+      <div class="usage-desc">Hukuki uyarı, tüketici hakları modülü</div>
+    </div>
+  </div>
+
+  <div class="section-label">Önizleme</div>
+  <div class="preview-bar" style="background:#141B2D;">
+    <span class="preview-text" style="color:#F8FAF9;">Shoplytic</span>
+    <button class="preview-btn" style="background:#1BB68A; color:#0A0F1E;">Analiz Et</button>
+  </div>
+  <div class="preview-bar" style="background:#F8FAF9; margin-top:6px; border: 0.5px solid #e0e5e3;">
+    <span class="preview-text" style="color:#0A0F1E;">Shoplytic</span>
+    <button class="preview-btn" style="background:#0D7A5F; color:#F8FAF9;">Analiz Et</button>
+  </div>
+
+</div>
